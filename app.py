@@ -58,6 +58,7 @@ def taobao(message):
     link = re.search("(?P<url>https?://[^\s]+)", msg) # extracting link with regex
     if link is not None:
         link = link.group("url")
+        link = link.replace('https://', '') # remove https:// from link
     return msg, link
 
 @app.route("/", methods=['GET', 'POST'])
