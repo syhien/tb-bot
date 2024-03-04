@@ -12,12 +12,14 @@
         <div class="mb-3">
           <label for="keyword" class="form-label">输入商品关键词</label>
           <input type="text" class="form-control" id="keyword" name="keyword" required>
+          <input type="button" class="btn btn-secondary mt-2" id="clearKeyword" value="清空">
         </div>
         <input type="submit" class="btn btn-primary" value="查询">
       </form>
       <div class="w-50 mx-auto">
         <label for="directLink" class="form-label">或者直接粘贴搜索结果</label>
         <input type="text" class="form-control" id="directLink" name="directLink" placeholder="粘贴搜索结果...">
+        <input type="button" class="btn btn-secondary mt-2" id="clearDirectLink" value="清空">
         <button id="directButton" class="btn btn-primary mt-3">直接跳转</button>
       </div>
     </div>
@@ -31,6 +33,14 @@
               link = 'taobao://' + link.substring(8);
           }
           window.open(link, '_blank');
+       });
+
+       $('#clearKeyword').click(function() {
+          $('#keyword').val("");
+       });
+
+       $('#clearDirectLink').click(function() {
+          $('#directLink').val("");
        });
     </script>
 </body>
