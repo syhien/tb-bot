@@ -13,6 +13,7 @@
           <label for="keyword" class="form-label">输入商品关键词</label>
           <input type="text" class="form-control" id="keyword" name="keyword" required>
           <input type="button" class="btn btn-secondary mt-2" id="clearKeyword" value="清空">
+          <input type="button" class="btn btn-secondary mt-2" id="pasteKeyword" value="粘贴自剪贴板">
         </div>
         <input type="submit" class="btn btn-primary" value="查询">
       </form>
@@ -20,6 +21,7 @@
         <label for="directLink" class="form-label">或者直接粘贴搜索结果</label>
         <input type="text" class="form-control" id="directLink" name="directLink" placeholder="粘贴搜索结果...">
         <input type="button" class="btn btn-secondary mt-3" id="clearDirectLink" value="清空">
+        <input type="button" class="btn btn-secondary mt-3" id="pasteDirectLink" value="粘贴自剪贴板">
         <button id="directButton" class="btn btn-primary mt-3">直接跳转</button>
       </div>
     </div>
@@ -38,9 +40,23 @@
        $('#clearKeyword').click(function() {
           $('#keyword').val("");
        });
+       
+       $('#pasteKeyword').click(function() {
+          navigator.clipboard.readText()
+            .then(text => {
+              $('#keyword').val(text);
+            });
+       });
 
        $('#clearDirectLink').click(function() {
           $('#directLink').val("");
+       });
+
+       $('#pasteDirectLink').click(function() {
+          navigator.clipboard.readText()
+            .then(text => {
+              $('#directLink').val(text);
+            });
        });
     </script>
 </body>
