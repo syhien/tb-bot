@@ -47,7 +47,12 @@ def taobao(message):
         )
         material_info = material_response["result_list"][0]
     except Exception as e:
-        return "没有找到相关商品", str(e)
+        return (
+            "没有找到相关商品，识别出的关键词是："
+            + keyword
+            + "\n如识别无明显错漏则可能是单纯没开推广",
+            str(e),
+        )
 
     msg = material_info["publish_info"]["income_rate"] + "%\n"
 
