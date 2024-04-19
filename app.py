@@ -1,21 +1,31 @@
 from flask import Flask, render_template, request
+
 app = Flask(__name__)
 
-def taobao(message):
-    import top
-    import top.api
-    import top.api.base
-    import zhon.hanzi
-    import re
-    find_req = top.api.TbkDgMaterialOptionalRequest(
-        domain="http://gw.api.taobao.com/router/rest"
-    )
-    find_req.set_app_info(top.appinfo("33082016", "df6564cdf0c69b64581f915c4b770324"))
-    find_req.adzone_id = "111713900272"
-    find_req.material_id = "6707"
+from topsdk.client import TopApiClient
+from topsdk.defaultability.defaultability import Defaultability
+from topsdk.defaultability.request.taobao_tbk_dg_material_optional_upgrade_request import (
+    TaobaoTbkDgMaterialOptionalUpgradeRequest,
+)
+from topsdk.ability375.ability375 import Ability375
+from topsdk.ability375.request.taobao_tbk_tpwd_create_request import (
+    TaobaoTbkTpwdCreateRequest,
+)
+import zhon.hanzi
+import re
 
-    ring_req = top.api.TbkTpwdCreateRequest(domain="http://gw.api.taobao.com/router/rest")
-    ring_req.set_app_info(top.appinfo("33082016", "df6564cdf0c69b64581f915c4b770324"))
+
+def taobao(message):
+    client = TopApiClient(
+        appkey="33082016",
+        app_sercet="df6564cdf0c69b64581f915c4b770324",
+        top_gateway_url="https://eco.taobao.com/router/rest",
+        verify_ssl=False,
+    )
+    material_ability = Defaultability(client)
+    material_request = TaobaoTbkDgMaterialOptionalUpgradeRequest(
+        adzone_id="111713900272", material_id="6707"
+    )
 
     possible_keywords = re.split("[{}]".format(zhon.hanzi.non_stops), message)
     keywords = []
@@ -23,57 +33,64 @@ def taobao(message):
         if len(re.findall("[%s]" % zhon.hanzi.characters, i)) > 0:
             keywords.append(i)
     if len(keywords) == 0:
-        return "请输入搜索关键词"
+        return "请输入搜索关键词", "请输入搜索关键词"
     keyword = sorted(keywords, key=lambda x: len(x), reverse=True)[0]
     if keyword == "":
-        return "请输入搜索关键词"
+        return "请输入搜索关键词", "请输入搜索关键词"
 
+    keyword += "淘宝天猫"
     print(keyword)
-    find_req.q = keyword
+    material_request.q = keyword
     try:
-        find_resqonse = find_req.getResponse()["tbk_dg_material_optional_response"][
-            "result_list"
-        ]["map_data"][0]
-    except top.api.base.TopException:
-        return "没有找到相关商品"
+        material_response = material_ability.taobao_tbk_dg_material_optional_upgrade(
+            material_request
+        )
+        material_info = material_response["result_list"][0]
+    except Exception as e:
+        return "没有找到相关商品", str(e)
 
-    msg = str(float(find_resqonse["commission_rate"]) / 100) + "%\n"
+    msg = material_info["publish_info"]["income_rate"] + "%\n"
 
-    if find_resqonse["url"] == "":
-        keyword = keyword + "淘宝"
-        find_req.q = keyword
-        try:
-            find_resqonse = find_req.getResponse()["tbk_dg_material_optional_response"][
-                "result_list"
-            ]["map_data"][0]
-        except top.api.base.TopException:
-            return "没有找到相关商品"
+    link = (
+        material_info["publish_info"]["coupon_share_url"]
+        if "coupon_share_url" in material_info["publish_info"]
+        else material_info["publish_info"]["click_url"]
+    )
+    link = "https:" + link
 
-    if "coupon_share_url" in find_resqonse:
-        ring_req.url = "https:" + find_resqonse["coupon_share_url"]
-    else:
-        ring_req.url = "https:" + find_resqonse["url"]
+    tpwd_ability = Ability375(client)
+    tpwd_request = TaobaoTbkTpwdCreateRequest(
+        url=link,
+    )
+    try:
+        tpwd_response = tpwd_ability.taobao_tbk_tpwd_create(tpwd_request)
+        msg += tpwd_response["data"]["model"]
+    except Exception as e:
+        msg += "获取淘口令失败\n"
+        msg += link
 
-    msg += ring_req.getResponse()["tbk_tpwd_create_response"]["data"]["model"]
-    link = re.search("(?P<url>https?://[^\s]+)", msg) # extracting link with regex
+    link = re.search("(?P<url>https?://[^\s]+)", msg)  # extracting link with regex
     if link is not None:
         link = link.group("url")
-        link = link.replace('https://', '') # remove https:// from link
+        link = link.replace("https://", "")  # remove https:// from link
     return msg, link
 
-@app.route("/", methods=['GET', 'POST'])
+
+@app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        keyword = request.form.get('keyword')
+        keyword = request.form.get("keyword")
         result, link = taobao(keyword)
-        return render_template('result.html', result=result, link=link)
-    return render_template('index.html')
+        return render_template("result.html", result=result, link=link)
+    return render_template("index.html")
 
-@app.route("/search", methods=['POST'])
+
+@app.route("/search", methods=["POST"])
 def search():
-    keyword = request.form.get('keyword')
+    keyword = request.form.get("keyword")
     result, link = taobao(keyword)
-    return render_template('result.html', result=result, link=link)
+    return render_template("result.html", result=result, link=link)
+
 
 if __name__ == "__main__":
-    app.run(debug=False, host='::', port=80)
+    app.run(debug=True, host="::", port=80)
