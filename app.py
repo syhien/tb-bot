@@ -1,3 +1,4 @@
+import random
 from flask import Flask, render_template, request
 
 app = Flask(__name__)
@@ -11,8 +12,42 @@ from topsdk.ability375.ability375 import Ability375
 from topsdk.ability375.request.taobao_tbk_tpwd_create_request import (
     TaobaoTbkTpwdCreateRequest,
 )
-import zhon.hanzi
 import re
+
+
+def random_drop_char(s):
+    if len(s) > 1:
+        i = random.randint(0, len(s) - 1)
+        while s[i] in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789":
+            i = random.randint(0, len(s) - 1)
+        return s[:i] + s[i + 1 :]
+    return s
+
+
+def search_item(client, keyword):
+    material_ability = Defaultability(client)
+    material_request = TaobaoTbkDgMaterialOptionalUpgradeRequest(
+        adzone_id="111713900272", material_id="6707"
+    )
+    link = ""
+    for _ in range(5):
+        if keyword == "":
+            raise Exception("Empty keyword")
+        print(keyword)
+        material_request.q = keyword
+        material_response = material_ability.taobao_tbk_dg_material_optional_upgrade(
+            material_request
+        )
+        material_info = material_response["result_list"][0]
+        link = (
+            material_info["publish_info"]["coupon_share_url"]
+            if "coupon_share_url" in material_info["publish_info"]
+            else material_info["publish_info"]["click_url"]
+        )
+        if link != "":
+            return material_info["publish_info"]["income_rate"] + "%\n", "https:" + link
+        keyword = random_drop_char(keyword)
+    raise Exception("No item found")
 
 
 def taobao(message):
@@ -20,48 +55,17 @@ def taobao(message):
         appkey="33082016",
         app_sercet="df6564cdf0c69b64581f915c4b770324",
         top_gateway_url="https://eco.taobao.com/router/rest",
-        verify_ssl=False,
     )
-    material_ability = Defaultability(client)
-    material_request = TaobaoTbkDgMaterialOptionalUpgradeRequest(
-        adzone_id="111713900272", material_id="6707"
-    )
-
-    possible_keywords = re.split("[{}]".format(zhon.hanzi.non_stops), message)
-    keywords = []
-    for i in possible_keywords:
-        if len(re.findall("[%s]" % zhon.hanzi.characters, i)) > 0:
-            keywords.append(i)
-    if len(keywords) == 0:
-        return "请输入搜索关键词", "请输入搜索关键词"
-    keyword = sorted(keywords, key=lambda x: len(x), reverse=True)[0]
-    if keyword == "":
-        return "请输入搜索关键词", "请输入搜索关键词"
-
-    keyword += "淘宝天猫"
-    print(keyword)
-    material_request.q = keyword
-    try:
-        material_response = material_ability.taobao_tbk_dg_material_optional_upgrade(
-            material_request
-        )
-        material_info = material_response["result_list"][0]
-    except Exception as e:
-        return (
-            "没有找到相关商品，识别出的关键词是："
-            + keyword
-            + "\n如识别无明显错漏则可能是单纯没开推广",
-            str(e),
-        )
-
-    msg = material_info["publish_info"]["income_rate"] + "%\n"
-
-    link = (
-        material_info["publish_info"]["coupon_share_url"]
-        if "coupon_share_url" in material_info["publish_info"]
-        else material_info["publish_info"]["click_url"]
-    )
-    link = "https:" + link
+    link = None
+    for _ in range(3):
+        try:
+            msg, link = search_item(client, message)
+        except Exception as e:
+            pass
+        if link is not None:
+            break
+    if link is None:
+        return "未找到商品，疑似真的没加推广", "None"
 
     tpwd_ability = Ability375(client)
     tpwd_request = TaobaoTbkTpwdCreateRequest(
