@@ -13,7 +13,8 @@ class TaobaoTbkItemInfoUpgradeGetRequest(BaseRequest):
         biz_scene_id: str = None,
         promotion_type: str = None,
         relation_id: str = None,
-        manage_item_pub_id: int = None
+        manage_item_pub_id: int = None,
+        get_tlj_info: int = None
     ):
         """
             商品ID。多个用","分割，一次最多查询20个
@@ -39,6 +40,10 @@ class TaobaoTbkItemInfoUpgradeGetRequest(BaseRequest):
             商品库服务账户(场景id3权限对应的memberid）
         """
         self._manage_item_pub_id = manage_item_pub_id
+        """
+            是否获取单品淘礼金剩余数量，0-否，1-是，默认否(仅开通淘礼金权限媒体可查)
+        """
+        self._get_tlj_info = get_tlj_info
 
     @property
     def item_id(self):
@@ -106,6 +111,17 @@ class TaobaoTbkItemInfoUpgradeGetRequest(BaseRequest):
         else:
             raise TypeError("manage_item_pub_id must be int")
 
+    @property
+    def get_tlj_info(self):
+        return self._get_tlj_info
+
+    @get_tlj_info.setter
+    def get_tlj_info(self, get_tlj_info):
+        if isinstance(get_tlj_info, int):
+            self._get_tlj_info = get_tlj_info
+        else:
+            raise TypeError("get_tlj_info must be int")
+
 
     def get_api_name(self):
         return "taobao.tbk.item.info.upgrade.get"
@@ -129,6 +145,9 @@ class TaobaoTbkItemInfoUpgradeGetRequest(BaseRequest):
 
         if self._manage_item_pub_id is not None:
             request_dict["manage_item_pub_id"] = convert_basic(self._manage_item_pub_id)
+
+        if self._get_tlj_info is not None:
+            request_dict["get_tlj_info"] = convert_basic(self._get_tlj_info)
 
         return request_dict
 

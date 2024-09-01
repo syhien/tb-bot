@@ -82,7 +82,7 @@ class TaobaoTbkDgMaterialOptionalUpgradeRequest(BaseRequest):
         """
         self._is_tmall = is_tmall
         """
-            排序_des（降序），排序_asc（升序），销量（total_sales），淘客收入比率（tk_rate）， 累计推广量（tk_total_sales），总支出佣金（tk_total_commi），预估到价格（final_promotion_price），匹配分（match）
+            排序_des（降序），排序_asc（升序），销量（total_sales），淘客收入比率（tk_rate），营销计划佣金（tk_mkt_rate）， 累计推广量（tk_total_sales），总支出佣金（tk_total_commi），预估到价格（final_promotion_price），匹配分（match）
         """
         self._sort = sort
         """

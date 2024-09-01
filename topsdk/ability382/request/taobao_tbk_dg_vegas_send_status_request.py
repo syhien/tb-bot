@@ -41,7 +41,7 @@ class TaobaoTbkDgVegasSendStatusRequest(BaseRequest):
         """
         self._pid = pid
         """
-            查询红包类型，1-超级红包，2-福利购，3-签到红包，4-福利直降，不传时默认查询超级红包数据
+            查询红包类型，1-超级红包，2-福利购，3-签到红包，4-福利直降，5-幸运赢免单，不传时默认查询超级红包数据
         """
         self._activity_category = activity_category
 

@@ -21,7 +21,8 @@ class TaobaoTbkDgVegasTljCreateRequest(BaseRequest):
         name: str = None,
         total_num: int = None,
         item_id: str = None,
-        campaign_type: str = None
+        campaign_type: str = None,
+        use_threshold: str = None
     ):
         """
             妈妈广告位Id
@@ -32,7 +33,7 @@ class TaobaoTbkDgVegasTljCreateRequest(BaseRequest):
         """
         self._security_level = security_level
         """
-            使用开始日期。相对时间，无需填写，以用户领取时间作为使用开始时间。绝对时间，格式 yyyy-MM-dd，例如，2019-01-29，表示从2019-01-29 00:00:00 开始
+            使用开始日期。相对时间，无需填写，以用户领取时间作为使用开始时间。绝对时间，格式 yyyy-MM-dd，例如，2019-01-29，表示从2019-01-29 00:00:00 开始,格式 yyyy-MM-dd HH:mm:ss，例如，2019-01-29 20:00:10，表示从2019-01-2920:00:10 开始
         """
         self._use_start_time = use_start_time
         """
@@ -40,7 +41,7 @@ class TaobaoTbkDgVegasTljCreateRequest(BaseRequest):
         """
         self._use_end_time_mode = use_end_time_mode
         """
-            使用结束日期。如果是结束时间模式为相对时间，时间格式为1-7直接的整数, 例如，1（相对领取时间1天）； 如果是绝对时间，格式为yyyy-MM-dd，例如，2019-01-29，表示到2019-01-29 23:59:59结束
+            使用结束日期。如果是结束时间模式为相对时间，时间格式为1-7直接的整数, 例如，1（相对领取时间1天）； 如果是绝对时间，格式为yyyy-MM-dd，例如，2019-01-29，表示到2019-01-29 23:59:59结束,格式 yyyy-MM-dd HH:mm:ss，例如，2019-01-29 20:00:10，表示从2019-01-29 20:00:10 开始
         """
         self._use_end_time = use_end_time
         """
@@ -79,6 +80,10 @@ class TaobaoTbkDgVegasTljCreateRequest(BaseRequest):
             已下线，后续不需要填写
         """
         self._campaign_type = campaign_type
+        """
+            淘礼金使用门槛，实付款大于等于门槛面额时才可使用此淘礼金；门槛值不能小于淘礼金面额
+        """
+        self._use_threshold = use_threshold
 
     @property
     def adzone_id(self):
@@ -234,6 +239,17 @@ class TaobaoTbkDgVegasTljCreateRequest(BaseRequest):
         else:
             raise TypeError("campaign_type must be str")
 
+    @property
+    def use_threshold(self):
+        return self._use_threshold
+
+    @use_threshold.setter
+    def use_threshold(self, use_threshold):
+        if isinstance(use_threshold, str):
+            self._use_threshold = use_threshold
+        else:
+            raise TypeError("use_threshold must be str")
+
 
     def get_api_name(self):
         return "taobao.tbk.dg.vegas.tlj.create"
@@ -281,6 +297,9 @@ class TaobaoTbkDgVegasTljCreateRequest(BaseRequest):
 
         if self._campaign_type is not None:
             request_dict["campaign_type"] = convert_basic(self._campaign_type)
+
+        if self._use_threshold is not None:
+            request_dict["use_threshold"] = convert_basic(self._use_threshold)
 
         return request_dict
 
