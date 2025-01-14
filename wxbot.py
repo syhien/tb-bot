@@ -30,7 +30,7 @@ tools = [
 @robot.handler
 def taobao_search(message):
     messages = [
-        {"role": "system", "content": "你是一个商品搜索助手。当你接收到用户的消息时，你会提取消息中的商品标题部分进行商品搜索。当用户的消息不包含商品标题时，你会进行通用问答。"},
+        {"role": "system", "content": "你是一个商品助手。当你接收到用户的消息时，你会提取消息中的商品标题部分进行商品搜索。当用户的消息不包含商品标题时，你会进行通用问答。"},
         {"role": "user", "content": message.content}
     ]
     response = gpt4omini.chat.completions.create(
@@ -40,8 +40,8 @@ def taobao_search(message):
     )
     if len(response.choices[0].message.tool_calls) > 0:
         title = json.loads(response.choices[0].message.tool_calls[0].function.arguments)["title"]
-        msg, _ = taobao.search(title)
-        return f"4omini认为商品标题是{title}，搜索结果如下：\n{msg}"
+        result, _ = taobao.search(title)
+        return f"4omini认为商品标题是{title}，搜索结果如下：\n{result}"
     else:
         return response.choices[0].message.content
 
