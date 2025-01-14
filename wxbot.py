@@ -30,7 +30,7 @@ tools = [
 @robot.handler
 def taobao_search(message, session):
     history = session.get("history", [])
-    history = history[:10]
+    history = history[10:] if len(history) > 10 else history
     history += {"role": "user", "content": message.content}
     messages = [
         {"role": "system", "content": 
@@ -40,6 +40,7 @@ def taobao_search(message, session):
         history,
         {"role": "user", "content": message.content}
     ]
+    print(messages)
     response = gemini2.chat.completions.create(
         model="gemini-2.0-flash-exp",
         messages=messages,
