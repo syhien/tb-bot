@@ -5,9 +5,9 @@ import json
 import os
 
 robot = werobot.WeRoBot(token="syh1en")
-gpt4omini = OpenAI(
-    base_url="https://models.inference.ai.azure.com",
-    api_key=os.getenv("OPENAI_API_KEY")
+gemini2 = OpenAI(
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+    api_key=os.getenv("GEMINI_API_KEY")
 )
 tools = [
     {
@@ -36,15 +36,16 @@ def taobao_search(message):
 """},
         {"role": "user", "content": message.content}
     ]
-    response = gpt4omini.chat.completions.create(
-        model="gpt-4o-mini",
+    response = gemini2.chat.completions.create(
+        model="gemini-2.0-flash-exp",
         messages=messages,
-        tools=tools
+        tools=tools,
+        tool_choice="auto"
     )
     if response.choices[0].message.tool_calls is not None:
         title = json.loads(response.choices[0].message.tool_calls[0].function.arguments)["title"]
         result, _ = taobao(title)
-        return "4omini认为商品标题是【{}】，搜索结果如下：\n{}".format(title, result)
+        return "gemini2.0flash认为商品标题是【{}】，搜索结果如下：\n{}".format(title, result)
     else:
         return response.choices[0].message.content
 
