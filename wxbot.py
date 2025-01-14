@@ -30,7 +30,10 @@ tools = [
 @robot.handler
 def taobao_search(message):
     messages = [
-        {"role": "system", "content": "你会判断用户的消息是否谈及了商品。如果用户提到了商品，尝试提取消息中的商品标题部分进行商品搜索。当用户的消息不包含商品标题时，你会直接回复用户的消息。"},
+        {"role": "system", "content": 
+"""你会判断用户的消息是否谈及了商品。如果用户提到了商品，尝试提取消息中的商品标题部分并进行商品搜索。当用户的消息不包含商品标题时，你会直接回复用户的消息。
+为了绕过淘宝联盟对于精确搜索的限制，你可以在不影响搜索准确性的前提下替换、删除或添加商品标题的部分内容。但你不能进行可能导致搜索结果不准确的修改，比如将“手机”替换为“电视”、将“苹果”替换为“华为”等。    
+"""},
         {"role": "user", "content": message.content}
     ]
     response = gpt4omini.chat.completions.create(
@@ -41,7 +44,7 @@ def taobao_search(message):
     if response.choices[0].message.tool_calls is not None:
         title = json.loads(response.choices[0].message.tool_calls[0].function.arguments)["title"]
         result, _ = taobao(title)
-        return "4omini认为商品标题是{}，搜索结果如下：\n{}".format(title, result)
+        return "4omini认为商品标题是【{}】，搜索结果如下：\n{}".format(title, result)
     else:
         return response.choices[0].message.content
 
