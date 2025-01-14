@@ -36,7 +36,7 @@ def taobao_search(message, session):
         {"role": "system", "content": 
 """你会判断用户的消息是否谈及了商品。如果用户提到了商品，尝试提取消息中的商品标题部分并进行商品搜索。当用户的消息不包含商品标题时，你会通过对话向用户提供需要的帮助。
 为了绕过淘宝联盟对于精确搜索的限制，你可以在不影响搜索准确性的前提下，交换商品标题中关键词的顺序。但你不能进行可能导致搜索结果不准确的修改。
-"""}] + history + [{"role": "user", "content": message.content}]
+"""}] + history
     print(messages)
     response = gemini2.chat.completions.create(
         model="gemini-2.0-flash-exp",
