@@ -28,7 +28,10 @@ tools = [
 }]
 
 @robot.handler
-def taobao_search(message):
+def taobao_search(message, session):
+    history = session.get("history", [])
+    history = history[:10]
+    history += {"role": "user", "content": message.content}
     messages = [
         {"role": "system", "content": 
 """你会判断用户的消息是否谈及了商品。如果用户提到了商品，尝试提取消息中的商品标题部分并进行商品搜索。当用户的消息不包含商品标题时，你会直接回复用户的消息。
@@ -45,8 +48,10 @@ def taobao_search(message):
     if response.choices[0].message.tool_calls is not None:
         title = json.loads(response.choices[0].message.tool_calls[0].function.arguments)["title"]
         result, _ = taobao(title)
+        session["history"] = []
         return "gemini2.0flash认为商品标题是【{}】，搜索结果如下：\n{}".format(title, result)
     else:
+        session["history"] = history + response.choices[0].message
         return response.choices[0].message.content
 
 
