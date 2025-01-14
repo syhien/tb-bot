@@ -41,7 +41,7 @@ def taobao_search(message):
     if len(response.choices[0].message.tool_calls) > 0:
         title = json.loads(response.choices[0].message.tool_calls[0].function.arguments)["title"]
         msg, _ = taobao.search(title)
-        return msg
+        return f"4omini认为商品标题是{title}，搜索结果如下：\n{msg}"
     else:
         return response.choices[0].message.content
 
