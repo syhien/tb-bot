@@ -38,7 +38,7 @@ def taobao_search(message):
         messages=messages,
         tools=tools
     )
-    if len(response.choices[0].message.tool_calls) > 0:
+    if response.choices[0].message.tool_calls is not None:
         title = json.loads(response.choices[0].message.tool_calls[0].function.arguments)["title"]
         result, _ = taobao.search(title)
         return "4omini认为商品标题是{}，搜索结果如下：\n{}".format(title, result)
