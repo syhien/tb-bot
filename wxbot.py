@@ -31,7 +31,7 @@ tools = [
 def taobao_search(message, session):
     history = session.get("history", [])
     history = history[10:] if len(history) > 10 else history
-    history += {"role": "user", "content": message.content}
+    history += [{"role": "user", "content": message.content}]
     messages = [
         {"role": "system", "content": 
 """你会判断用户的消息是否谈及了商品。如果用户提到了商品，尝试提取消息中的商品标题部分并进行商品搜索。当用户的消息不包含商品标题时，你会通过对话向用户提供需要的帮助。
