@@ -51,7 +51,7 @@ def taobao_search(message, session):
         session["history"] = []
         return "gemini2.0flash认为商品标题是【{}】，搜索结果如下：\n{}".format(title, result)
     else:
-        session["history"] = history + {"role": "assistant", "content": response.choices[0].message.content}
+        session["history"] = history + [{"role": "assistant", "content": response.choices[0].message.content}]
         return response.choices[0].message.content
 
 
