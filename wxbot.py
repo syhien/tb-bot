@@ -46,7 +46,7 @@ def taobao_search(message, session):
     if response.choices[0].message.tool_calls is not None:
         title = json.loads(response.choices[0].message.tool_calls[0].function.arguments)["title"]
         result, _ = taobao(title)
-        session["history"] = history + [{"role": "assistant", "content": "gemini2.0flash认为商品标题是【{}】，搜索结果如下：\n{}".format(title, result)}]
+        session["history"] = []
         return "gemini2.0flash认为商品标题是【{}】，搜索结果如下：\n{}".format(title, result)
     else:
         session["history"] = history + [{"role": "assistant", "content": response.choices[0].message.content}]
