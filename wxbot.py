@@ -6,7 +6,7 @@ import os
 
 robot = werobot.WeRoBot(token="syh1en")
 gemini2 = OpenAI(
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+    base_url="https://gemini-proxy.keyikai.me/",
     api_key=os.getenv("GEMINI_API_KEY")
 )
 tools = [
