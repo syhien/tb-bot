@@ -1,3 +1,4 @@
+index.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,46 +6,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>商品查询</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Optional: Add custom styles if needed */
+        body { padding-top: 2rem; padding-bottom: 2rem; }
+        .container { max-width: 720px; } /* Limit max width on larger screens */
+    </style>
 </head>
 <body>
-    <div class="container py-5">
-      <form class="w-50 mx-auto mb-5" method="POST" action="/">
-        <div class="mb-3">
-          <label for="keyword" class="form-label">输入商品关键词</label>
-          <input type="text" class="form-control" id="keyword" name="keyword" required>
-          <input type="button" class="btn btn-secondary mt-2" id="clearKeyword" value="清空">
-          <input type="button" class="btn btn-secondary mt-2" id="pasteKeyword" value="粘贴自剪贴板">
+    <div class="container">
+      <h1 class="text-center mb-4">商品查询与跳转</h1>
+
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">通过关键词查询</h5>
+          <form method="POST" action="/">
+            <div class="mb-3">
+              <label for="keyword" class="form-label">输入商品关键词</label>
+              <input type="text" class="form-control" id="keyword" name="keyword" required placeholder="例如：男士 T 恤">
+            </div>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+              <input type="button" class="btn btn-outline-secondary btn-sm" id="clearKeyword" value="清空">
+              <input type="button" class="btn btn-outline-secondary btn-sm" id="pasteKeyword" value="粘贴">
+            </div>
+            <button type="submit" class="btn btn-primary w-100">查询商品</button>
+          </form>
         </div>
-        <input type="submit" class="btn btn-primary" value="查询">
-      </form>
-      <div class="w-50 mx-auto">
-        <label for="directLink" class="form-label">或者直接粘贴搜索结果</label>
-        <input type="text" class="form-control" id="directLink" name="directLink" placeholder="粘贴搜索结果...">
-        <input type="button" class="btn btn-secondary mt-3" id="clearDirectLink" value="清空">
-        <input type="button" class="btn btn-secondary mt-3" id="pasteDirectLink" value="粘贴自剪贴板">
-        <button id="directButton" class="btn btn-primary mt-3">直接跳转</button>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">通过链接跳转</h5>
+          <div class="mb-3">
+            <label for="directLink" class="form-label">粘贴包含淘口令或链接的文本</label>
+            <textarea class="form-control" id="directLink" name="directLink" rows="3" placeholder="粘贴客服发送的包含链接的整段消息..."></textarea>
+          </div>
+          <div class="d-flex flex-wrap gap-2 mb-3">
+             <input type="button" class="btn btn-outline-secondary btn-sm" id="clearDirectLink" value="清空">
+             <input type="button" class="btn btn-outline-secondary btn-sm" id="pasteDirectLink" value="粘贴">
+          </div>
+          <button id="directButton" class="btn btn-success w-100">打开淘宝链接</button>
+        </div>
       </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
        $('#directButton').click(function() {
           let text = $('#directLink').val();
-          let link = text.match(/(https?|taobao):\/\/[^\s]*/)[0]; 
-          if(link.startsWith('https')) {
-              link = 'taobao://' + link.substring(8);
+          // More robust regex to find taobao/https links
+          let match = text.match(/(https?:\/\/|taobao:\/\/)[a-zA-Z0-9\.\/=\?%\-_&#]+/);
+          if (match && match[0]) {
+              let link = match[0];
+              console.log("Found link:", link);
+              if(link.startsWith('https')) {
+                  // Attempt to convert https link to taobao:// scheme if it looks like a product/shop link
+                  // This is a basic conversion, might need refinement
+                  if (link.includes('item.htm') || link.includes('shop/view_shop.htm')) {
+                     link = 'taobao://' + link.substring(link.indexOf('m.tb.cn') > -1 ? link.indexOf('m.tb.cn') : link.indexOf('item.taobao.com')); // Adjust based on typical mobile/desktop URLs
+                  } else {
+                     // If it's not a recognizable product/shop link, open the https link directly
+                     window.open(link, '_blank');
+                     return; // Exit after opening https link
+                  }
+              }
+              // Ensure it starts with taobao:// before opening
+              if (link.startsWith('taobao://')) {
+                 console.log("Opening taobao link:", link);
+                 window.open(link, '_blank');
+              } else {
+                 alert('无法识别有效的淘宝链接。');
+              }
+          } else {
+              alert('未在文本中找到有效的链接。');
           }
-          window.open(link, '_blank');
        });
 
        $('#clearKeyword').click(function() {
           $('#keyword').val("");
        });
-       
+
        $('#pasteKeyword').click(function() {
           navigator.clipboard.readText()
             .then(text => {
               $('#keyword').val(text);
+            })
+            .catch(err => {
+                console.error('Failed to read clipboard contents: ', err);
+                alert('无法读取剪贴板内容。');
             });
        });
 
@@ -56,6 +105,10 @@
           navigator.clipboard.readText()
             .then(text => {
               $('#directLink').val(text);
+            })
+            .catch(err => {
+                console.error('Failed to read clipboard contents: ', err);
+                alert('无法读取剪贴板内容。');
             });
        });
     </script>
