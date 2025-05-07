@@ -34,6 +34,9 @@ def search_item(client, keyword):
         material_response = material_ability.taobao_tbk_dg_material_optional_upgrade(
             material_request
         )
+        if len(material_response["result_list"]) == 0:
+            keyword = random_drop_char(keyword)
+            continue
         material_info = material_response["result_list"][0]
         link = (
             material_info["publish_info"]["coupon_share_url"]
@@ -42,7 +45,6 @@ def search_item(client, keyword):
         )
         if link != "":
             return material_info["publish_info"]["income_rate"] + "%\n", "https:" + link
-        keyword = random_drop_char(keyword)
     raise Exception("No item found")
 
 

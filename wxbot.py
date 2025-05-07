@@ -6,8 +6,8 @@ import os
 
 robot = werobot.WeRoBot(token="syh1en")
 gemini2 = OpenAI(
-    base_url="https://gemini-proxy.keyikai.me/",
-    api_key=os.getenv("GEMINI_API_KEY")
+    base_url="https://api.deepseek.com",
+    api_key="sk-0f098a8eafa6409bb3ff23d49a12c1c9"
 )
 tools = [
     {
@@ -38,16 +38,16 @@ def taobao_search(message, session):
 为了绕过淘宝联盟对于精确搜索的限制，你可以在不影响搜索准确性的前提下，交换商品标题中关键词的顺序。但你不能进行可能导致搜索结果不准确的修改。
 """}] + history
     response = gemini2.chat.completions.create(
-        model="gemini-2.0-flash-exp",
+        model="deepseek-chat",
         messages=messages,
         tools=tools,
-        tool_choice="auto"
     )
     if response.choices[0].message.tool_calls is not None:
         title = json.loads(response.choices[0].message.tool_calls[0].function.arguments)["title"]
         result, _ = taobao(title)
         session["history"] = []
-        return "gemini2.0flash认为商品标题是【{}】，搜索结果如下：\n{}".format(title, result)
+        ret_msg = "标题是【{}】，搜索结果如下：\n{}".format(title, result)
+        return ret_msg
     else:
         session["history"] = history + [{"role": "assistant", "content": response.choices[0].message.content}]
         return response.choices[0].message.content
@@ -56,4 +56,4 @@ def taobao_search(message, session):
 # 让服务器监听在 0.0.0.0:80
 robot.config["HOST"] = "127.0.0.1"
 robot.config["PORT"] = 8923
-robot.run(server="gunicorn")
+robot.run()
