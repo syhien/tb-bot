@@ -128,7 +128,10 @@ def taobao(message):
             )
             tpwd_response = tpwd_ability.taobao_tbk_tpwd_create(tpwd_request)
             tpwd = tpwd_response["data"]["model"]
+            print(f"[SUCCESS] Tpwd generated: {tpwd[:50]}...")
         except Exception as e:
+            print(f"[ERROR] Tpwd generation failed: {e}")
+            print(f"        Link: {item['link']}")
             tpwd = ""
 
         # Build formatted message
