@@ -1,58 +1,111 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商品查询</title>
+    <title>商品查询与跳转 - 淘宝联盟</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        /* Optional: Add custom styles if needed */
-        body { padding-top: 2rem; padding-bottom: 2rem; }
-        .container { max-width: 720px; } /* Limit max width on larger screens */
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
 </head>
 <body>
     <div class="container">
-      <h1 class="text-center mb-4">商品查询与跳转</h1>
+      <!-- 主标题 -->
+      <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold text-brand mb-3">
+          <i class="bi bi-bag-heart-fill"></i>
+          商品查询与跳转
+        </h1>
+        <p class="text-secondary lead">快速查询淘宝商品，获取返利链接</p>
+      </div>
 
-      <div class="card mb-4">
+      <!-- 搜索查询卡片 -->
+      <div class="card mb-4 fade-in">
         <div class="card-body">
-          <h5 class="card-title">通过关键词查询</h5>
+          <h5 class="card-title mb-3">
+            <i class="bi bi-search text-brand"></i>
+            通过关键词查询
+          </h5>
           <form method="POST" action="/">
             <div class="mb-3">
-              <label for="keyword" class="form-label">输入商品关键词</label>
-              <input type="text" class="form-control" id="keyword" name="keyword" required placeholder="例如：男士 T 恤">
+              <label for="keyword" class="form-label fw-semibold">
+                <i class="bi bi-tag-fill text-accent"></i>
+                输入商品关键词
+              </label>
+              <input type="text" class="form-control form-control-lg" id="keyword" name="keyword" required
+                     placeholder="例如：Nike 运动鞋、iPhone 15、芙丽芳丝洗面霜">
             </div>
             <div class="d-flex flex-wrap gap-2 mb-3">
-              <input type="button" class="btn btn-outline-secondary btn-sm" id="clearKeyword" value="清空">
-              <input type="button" class="btn btn-outline-secondary btn-sm" id="pasteKeyword" value="粘贴">
+              <button type="button" class="btn btn-outline-secondary" id="clearKeyword">
+                <i class="bi bi-arrow-counterclockwise"></i>
+                清空
+              </button>
+              <button type="button" class="btn btn-outline-secondary" id="pasteKeyword">
+                <i class="bi bi-clipboard"></i>
+                粘贴
+              </button>
             </div>
-            <button type="submit" class="btn btn-primary w-100">查询商品</button>
+            <button type="submit" class="btn btn-primary btn-lg w-100">
+              <i class="bi bi-search"></i>
+              查询商品
+            </button>
           </form>
         </div>
       </div>
 
-      <div class="card">
+      <!-- 链接跳转卡片 -->
+      <div class="card fade-in">
         <div class="card-body">
-          <h5 class="card-title">通过链接跳转</h5>
+          <h5 class="card-title mb-3">
+            <i class="bi bi-link-45deg text-success"></i>
+            通过链接跳转
+          </h5>
           <div class="mb-3">
-            <label for="directLink" class="form-label">粘贴包含淘口令或链接的文本</label>
-            <textarea class="form-control" id="directLink" name="directLink" rows="3" placeholder="粘贴客服发送的包含链接的整段消息..."></textarea>
+            <label for="directLink" class="form-label fw-semibold">
+              <i class="bi bi-clipboard-data text-accent"></i>
+              粘贴包含淘口令或链接的文本
+            </label>
+            <textarea class="form-control form-control-lg" id="directLink" name="directLink" rows="4"
+                      placeholder="粘贴客服发送的包含链接的整段消息..."></textarea>
           </div>
           <div class="d-flex flex-wrap gap-2 mb-3">
-             <input type="button" class="btn btn-outline-secondary btn-sm" id="clearDirectLink" value="清空">
-             <input type="button" class="btn btn-outline-secondary btn-sm" id="pasteDirectLink" value="粘贴">
+             <button type="button" class="btn btn-outline-secondary" id="clearDirectLink">
+               <i class="bi bi-trash"></i>
+               清空
+             </button>
+             <button type="button" class="btn btn-outline-secondary" id="pasteDirectLink">
+               <i class="bi bi-clipboard"></i>
+               粘贴
+             </button>
           </div>
-          <button id="directButton" class="btn btn-success w-100">打开淘宝链接</button>
+          <button id="directButton" class="btn btn-success btn-lg w-100">
+            <i class="bi bi-box-arrow-up-right"></i>
+            打开淘宝链接
+          </button>
         </div>
+      </div>
+
+      <!-- 页脚提示 -->
+      <div class="text-center mt-4 text-secondary">
+        <small>
+          <i class="bi bi-info-circle"></i>
+          支持完整标题搜索，智能处理比价检测
+        </small>
       </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
     <script>
+       // 链接跳转功能增强
        $('#directButton').click(function() {
           let text = $('#directLink').val();
+          if (!text.trim()) {
+             showToast('请输入包含链接的文本', 'error');
+             return;
+          }
+
           // More robust regex to find taobao/https links
           let match = text.match(/(https?:\/\/|taobao:\/\/)[a-zA-Z0-9\.\/=\?%\-_&#]+/);
           if (match && match[0]) {
@@ -66,6 +119,7 @@
                   } else {
                      // If it's not a recognizable product/shop link, open the https link directly
                      window.open(link, '_blank');
+                     showToast('正在打开链接...', 'success');
                      return; // Exit after opening https link
                   }
               }
@@ -73,42 +127,46 @@
               if (link.startsWith('taobao://')) {
                  console.log("Opening taobao link:", link);
                  window.open(link, '_blank');
+                 showToast('正在打开淘宝...', 'success');
               } else {
-                 alert('无法识别有效的淘宝链接。');
+                 showToast('无法识别有效的淘宝链接', 'error');
               }
           } else {
-              alert('未在文本中找到有效的链接。');
+              showToast('未在文本中找到有效的链接', 'error');
           }
        });
 
-       $('#clearKeyword').click(function() {
-          $('#keyword').val("");
-       });
-
-       $('#pasteKeyword').click(function() {
-          navigator.clipboard.readText()
-            .then(text => {
-              $('#keyword').val(text);
-            })
-            .catch(err => {
-                console.error('Failed to read clipboard contents: ', err);
-                alert('无法读取剪贴板内容。');
-            });
-       });
-
+       // 为直接链接功能添加清空和粘贴按钮的提示
        $('#clearDirectLink').click(function() {
           $('#directLink').val("");
+          showToast('已清空', 'info', 1500);
        });
 
        $('#pasteDirectLink').click(function() {
-          navigator.clipboard.readText()
-            .then(text => {
-              $('#directLink').val(text);
-            })
-            .catch(err => {
-                console.error('Failed to read clipboard contents: ', err);
-                alert('无法读取剪贴板内容。');
-            });
+          if (navigator.clipboard && navigator.clipboard.readText) {
+             navigator.clipboard.readText()
+               .then(text => {
+                 $('#directLink').val(text);
+                 showToast('已粘贴', 'success', 1500);
+               })
+               .catch(err => {
+                   console.error('Failed to read clipboard contents: ', err);
+                   showToast('无法读取剪贴板内容', 'error');
+               });
+          } else {
+             showToast('浏览器不支持剪贴板功能', 'error');
+          }
+       });
+
+       // 添加键盘快捷键支持
+       $(document).keydown(function(e) {
+          // Ctrl/Cmd + Enter 提交搜索
+          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+             const keyword = $('#keyword').val().trim();
+             if (keyword) {
+                $('form').first().submit();
+             }
+          }
        });
     </script>
 </body>

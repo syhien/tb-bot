@@ -1,168 +1,223 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>查询结果</title>
+    <title>查询结果 - 淘宝联盟</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     <style>
-        body { padding-top: 2rem; padding-bottom: 2rem; }
-        .container { max-width: 720px; }
         #result {
-            white-space: pre-wrap; /* Keep line breaks */
-            word-wrap: break-word; /* Break long words */
-            background-color: #f8f9fa; /* Light background for readability */
-            padding: 1rem;
-            border-radius: 0.25rem;
-            border: 1px solid #dee2e6;
-        }
-        .button-group a, .button-group button {
-            margin-bottom: 0.5rem; /* Add space between stacked buttons on small screens */
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background-color: var(--bg-gray);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid var(--border-gray);
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-      <!-- Search Form (optional, reuse from index if needed or simplify) -->
-      <div class="card mb-4">
+      <!-- 搜索表单 -->
+      <div class="card mb-4 fade-in">
         <div class="card-body">
-          <h5 class="card-title">再次查询</h5>
+          <h5 class="card-title mb-3">
+            <i class="bi bi-search text-brand"></i>
+            再次查询
+          </h5>
           <form method="POST" action="/search">
             <div class="mb-3">
-              <label for="keyword" class="form-label">输入商品关键词</label>
-              <input type="text" class="form-control" id="keyword" name="keyword" placeholder="例如：男士 T 恤">
+              <label for="keyword" class="form-label fw-semibold">
+                <i class="bi bi-tag-fill text-accent"></i>
+                输入商品关键词
+              </label>
+              <input type="text" class="form-control form-control-lg" id="keyword" name="keyword"
+                     placeholder="例如：Nike 运动鞋、iPhone 15">
             </div>
-             <div class="d-flex flex-wrap gap-2 mb-3">
-               <input type="button" class="btn btn-outline-secondary btn-sm" id="clearKeyword" value="清空">
-               <input type="button" class="btn btn-outline-secondary btn-sm" id="pasteKeyword" value="粘贴">
-             </div>
-            <button type="submit" class="btn btn-primary w-100">查询商品</button>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+              <button type="button" class="btn btn-outline-secondary" id="clearKeyword">
+                <i class="bi bi-arrow-counterclockwise"></i>
+                清空
+              </button>
+              <button type="button" class="btn btn-outline-secondary" id="pasteKeyword">
+                <i class="bi bi-clipboard"></i>
+                粘贴
+              </button>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100">
+              <i class="bi bi-search"></i>
+              查询商品
+            </button>
           </form>
         </div>
       </div>
 
+      <!-- 结果标题 -->
+      <div class="text-center mb-4">
+        <h2 class="display-6 fw-bold text-brand">
+          <i class="bi bi-check-circle-fill"></i>
+          查询结果
+        </h2>
+      </div>
 
-      <h2 class="text-center mb-3">查询结果</h2>
+      <!-- 结果内容 -->
       <div class="card">
         <div class="card-body">
             {% if results %}
-                <!-- Multiple results view -->
+                <!-- 多个结果视图 -->
                 <div id="multiResults">
                     {% for item in results %}
-                    <div class="result-item mb-4 p-3 border rounded">
-                        <h5 class="item-title">{{ loop.index }}. {{ item.title }}</h5>
-                        <p class="mb-1"><strong>价格:</strong> {{ item.price }}</p>
-                        <p class="mb-1"><strong>店铺:</strong> {{ item.shop_name }}</p>
-                        <p class="mb-3"><strong>收入比率:</strong> {{ item.income_rate }}%</p>
+                    <div class="result-item slide-up" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="item-title mb-0">
+                                <span class="badge bg-brand rounded-pill me-2">{{ loop.index }}</span>
+                                {{ item.title }}
+                            </h5>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-sm-6">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-currency-yen text-accent fs-4"></i>
+                                    <div>
+                                        <div class="text-secondary small">价格</div>
+                                        <div class="price fw-bold">¥{{ item.price }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-shop text-brand fs-4"></i>
+                                    <div>
+                                        <div class="text-secondary small">店铺</div>
+                                        <div class="shop-name fw-semibold">{{ item.shop_name }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="income-rate">
+                                <i class="bi bi-graph-up-arrow"></i>
+                                收入比率: {{ item.income_rate }}%
+                            </div>
+                        </div>
 
                         <div class="d-grid gap-2 d-sm-flex justify-content-sm-start button-group">
                             {% if item.tpwd %}
-                            <button class="btn btn-secondary btn-sm copyTpwdBtn"
-                                    data-tpwd="{{ item.tpwd }}">复制淘口令</button>
+                            <button class="btn btn-secondary copyTpwdBtn flex-fill"
+                                    data-tpwd="{{ item.tpwd }}">
+                                <i class="bi bi-clipboard"></i>
+                                复制淘口令
+                            </button>
                             {% endif %}
                             {% if links[loop.index0] %}
                             <a href="taobao://{{ links[loop.index0] }}" target="_blank"
-                               class="btn btn-success btn-sm">淘宝 App 打开</a>
+                               class="btn btn-success flex-fill">
+                                <i class="bi bi-phone"></i>
+                                淘宝 App 打开
+                            </a>
                             <a href="https://{{ links[loop.index0] }}" target="_blank"
-                               class="btn btn-info btn-sm">浏览器打开</a>
+                               class="btn btn-info flex-fill">
+                                <i class="bi bi-globe"></i>
+                                浏览器打开
+                            </a>
                             {% endif %}
                         </div>
                     </div>
                     {% endfor %}
                 </div>
 
-                <div class="mt-3 pt-3 border-top">
-                    <button id="copyAllButton" class="btn btn-secondary">复制全部结果文本</button>
+                <div class="mt-4 pt-4 border-top text-center">
+                    <button id="copyAllButton" class="btn btn-secondary btn-lg">
+                        <i class="bi bi-clipboard-data"></i>
+                        复制全部结果文本
+                    </button>
                 </div>
             {% else %}
-                <!-- Single result view (fallback) -->
-                <p id="result">{{ result }}</p>
-                <div class="d-grid gap-2 d-sm-flex justify-content-sm-start button-group mt-3">
-                    <button id="copyButton" class="btn btn-secondary">复制结果文本</button>
+                <!-- 单个结果视图（降级方案） -->
+                <div class="text-center mb-4">
+                    <i class="bi bi-info-circle text-brand" style="font-size: 4rem;"></i>
+                </div>
+                <p id="result" class="fs-5">{{ result }}</p>
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-start button-group mt-4">
+                    <button id="copyButton" class="btn btn-secondary btn-lg flex-fill">
+                        <i class="bi bi-clipboard"></i>
+                        复制结果文本
+                    </button>
                     {% if link %}
-                    <a href="taobao://{{ link }}" target="_blank" class="btn btn-success">在淘宝 App 打开</a>
-                    <a href="https://{{ link }}" target="_blank" class="btn btn-info">浏览器打开链接</a>
+                    <a href="taobao://{{ link }}" target="_blank" class="btn btn-success btn-lg flex-fill">
+                        <i class="bi bi-phone"></i>
+                        在淘宝 App 打开
+                    </a>
+                    <a href="https://{{ link }}" target="_blank" class="btn btn-info btn-lg flex-fill">
+                        <i class="bi bi-globe"></i>
+                        浏览器打开链接
+                    </a>
                     {% endif %}
                 </div>
             {% endif %}
         </div>
       </div>
-       <div class="text-center mt-4">
-           <a href="/" class="btn btn-outline-primary">返回首页</a>
-       </div>
+
+      <!-- 返回首页 -->
+      <div class="text-center mt-4">
+          <a href="/" class="btn btn-outline-primary btn-lg">
+              <i class="bi bi-house-door"></i>
+              返回首页
+          </a>
+      </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
     <script>
-        // Copy individual tpwd button
-        $(document).on('click', '.copyTpwdBtn', function() {
-            const tpwd = $(this).data('tpwd');
-            copyText(tpwd);
-        });
-
-        // Copy all results button
-        $('#copyAllButton').click(function() {
-            const resultText = $('#result').text();
-            copyText(resultText);
-        });
-
-        // Copy single result button (fallback)
-        $('#copyButton').click(function () {
-            const resultText = $('#result').text();
-            copyText(resultText);
-        });
-
-        function copyText(text) {
-            // Use navigator.clipboard for modern browsers
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(function() {
-                    showAlert('已复制到剪贴板！');
-                }, function(err) {
-                    console.error('复制失败: ', err);
-                    // Fallback for older browsers
-                    fallbackCopyTextToClipboard(text);
-                });
-            } else {
-                // Fallback for older browsers or insecure contexts
-                fallbackCopyTextToClipboard(text);
+        // 键盘快捷键支持
+        $(document).keydown(function(e) {
+            // Ctrl/Cmd + Enter 提交搜索
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                const keyword = $('#keyword').val().trim();
+                if (keyword) {
+                    $('form').first().submit();
+                }
             }
-        }
+        });
 
-        function fallbackCopyTextToClipboard(text) {
-            var $temp = $("<textarea>"); // Use textarea for multi-line
-            $("body").append($temp);
-            $temp.val(text).select();
-            try {
-                var successful = document.execCommand('copy');
-                showAlert(successful ? '已复制到剪贴板！' : '复制失败');
-            } catch (err) {
-                console.error('无法复制: ', err);
-                showAlert('复制失败，请手动复制');
-            }
-            $temp.remove();
-        }
-
-        function showAlert(message) {
-            // Simple alert for now, could be improved with toast notifications
-            alert(message);
-        }
-
+        // 为搜索表单添加清空和粘贴按钮的提示
         $('#clearKeyword').click(function() {
-          $('#keyword').val("");
+            $('#keyword').val("");
+            showToast('已清空', 'info', 1500);
         });
 
         $('#pasteKeyword').click(function() {
-          navigator.clipboard.readText()
-            .then(text => {
-              $('#keyword').val(text);
-            })
-            .catch(err => {
-                console.error('Failed to read clipboard contents: ', err);
-                alert('无法读取剪贴板内容。');
-            });
+            if (navigator.clipboard && navigator.clipboard.readText) {
+                navigator.clipboard.readText()
+                    .then(text => {
+                        $('#keyword').val(text);
+                        showToast('已粘贴', 'success', 1500);
+                    })
+                    .catch(err => {
+                        console.error('Failed to read clipboard contents: ', err);
+                        showToast('无法读取剪贴板内容', 'error');
+                    });
+            } else {
+                showToast('浏览器不支持剪贴板功能', 'error');
+            }
         });
+
+        // 添加复制按钮的悬浮提示
+        $('.copyTpwdBtn, #copyAllButton, #copyButton').hover(
+            function() {
+                $(this).addClass('shadow-brand');
+            },
+            function() {
+                $(this).removeClass('shadow-brand');
+            }
+        );
     </script>
 </body>
 </html>

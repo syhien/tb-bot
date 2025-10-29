@@ -1,0 +1,417 @@
+/* ========================================
+   淘宝联盟搜索系统 - 自定义样式
+   ======================================== */
+
+:root {
+  /* 配色方案 */
+  --brand-blue: #1677ff;
+  --brand-blue-light: #4096ff;
+  --brand-blue-dark: #0958d9;
+
+  --accent-orange: #ff6900;
+  --accent-orange-light: #ff8b3d;
+  --accent-orange-dark: #d95b00;
+
+  --success-green: #00b96b;
+  --warning-yellow: #faad14;
+  --error-red: #f5222d;
+
+  --text-primary: #262626;
+  --text-secondary: #8c8c8c;
+  --text-tertiary: #bfbfbf;
+
+  --bg-gray: #f5f5f5;
+  --border-gray: #d9d9d9;
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.1), 0 6px 20px -4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 30px -5px rgba(0, 0, 0, 0.12);
+
+  /* 过渡动画 */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+/* ========================================
+   基础样式增强
+   ======================================== */
+
+body {
+  color: var(--text-primary);
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+}
+
+/* 卡片阴影增强 */
+.card {
+  border: none;
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--transition-normal);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* ========================================
+   按钮样式增强
+   ======================================== */
+
+.btn {
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 12px 24px;
+  min-height: 44px;
+  transition: all var(--transition-fast);
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* 主按钮 - 品牌蓝 */
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-light) 100%);
+  box-shadow: 0 2px 8px rgba(22, 119, 255, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--brand-blue-dark) 0%, var(--brand-blue) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(22, 119, 255, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(22, 119, 255, 0.3);
+}
+
+/* 成功按钮 - 绿色 */
+.btn-success {
+  background: linear-gradient(135deg, var(--success-green) 0%, #00c896 100%);
+  box-shadow: 0 2px 8px rgba(0, 185, 107, 0.3);
+}
+
+.btn-success:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 185, 107, 0.4);
+}
+
+/* 次要按钮 */
+.btn-outline-secondary {
+  border: 2px solid var(--border-gray);
+  background: white;
+  color: var(--text-secondary);
+}
+
+.btn-outline-secondary:hover {
+  background: var(--bg-gray);
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+.btn-outline-secondary:active {
+  transform: scale(0.98);
+}
+
+/* 按钮组 */
+.button-group .btn {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 576px) {
+  .button-group {
+    flex-direction: column;
+  }
+  .button-group .btn {
+    width: 100%;
+  }
+}
+
+/* ========================================
+   表单控件增强
+   ======================================== */
+
+.form-control {
+  border: 2px solid var(--border-gray);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 16px;
+  min-height: 48px;
+  transition: all var(--transition-fast);
+}
+
+.form-control:focus {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 4px rgba(22, 119, 255, 0.1);
+  outline: none;
+}
+
+/* ========================================
+   Toast 通知样式
+   ======================================== */
+
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.toast {
+  padding: 16px 20px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  color: white;
+  font-weight: 500;
+  min-width: 300px;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transform: translateX(400px);
+  opacity: 0;
+  animation: toast-in var(--transition-normal) forwards;
+}
+
+.toast.success {
+  background: linear-gradient(135deg, var(--success-green) 0%, #00c896 100%);
+}
+
+.toast.error {
+  background: linear-gradient(135deg, var(--error-red) 0%, #ff4d4f 100%);
+}
+
+.toast.info {
+  background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-light) 100%);
+}
+
+@keyframes toast-in {
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-out {
+  to {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+}
+
+/* ========================================
+   加载动画
+   ======================================== */
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-normal);
+}
+
+.loading-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--bg-gray);
+  border-top-color: var(--brand-blue);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========================================
+   商品卡片增强
+   ======================================== */
+
+.result-item {
+  border: 2px solid var(--border-gray);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  background: white;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+}
+
+.result-item:hover {
+  border-color: var(--brand-blue);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.result-item .item-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.result-item .price {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent-orange);
+  margin: 12px 0;
+}
+
+.result-item .shop-name {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.result-item .income-rate {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--success-green);
+  color: white;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ========================================
+   图标样式
+   ======================================== */
+
+.icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* ========================================
+   响应式优化
+   ======================================== */
+
+@media (max-width: 576px) {
+  .container {
+    padding: 0 16px;
+  }
+
+  body {
+    padding: 16px 0;
+  }
+
+  .card {
+    margin-bottom: 16px;
+  }
+
+  .result-item {
+    padding: 16px;
+  }
+
+  .result-item .item-title {
+    font-size: 16px;
+  }
+
+  .result-item .price {
+    font-size: 20px;
+  }
+
+  .btn {
+    font-size: 14px;
+    padding: 10px 16px;
+  }
+
+  .toast {
+    min-width: 250px;
+    max-width: calc(100vw - 40px);
+  }
+}
+
+/* ========================================
+   辅助类
+   ======================================== */
+
+.text-brand {
+  color: var(--brand-blue) !important;
+}
+
+.text-accent {
+  color: var(--accent-orange) !important;
+}
+
+.bg-brand {
+  background-color: var(--brand-blue) !important;
+}
+
+.bg-accent {
+  background-color: var(--accent-orange) !important;
+}
+
+.border-brand {
+  border-color: var(--brand-blue) !important;
+}
+
+.border-accent {
+  border-color: var(--accent-orange) !important;
+}
+
+.shadow-brand {
+  box-shadow: 0 4px 12px rgba(22, 119, 255, 0.2);
+}
+
+/* 动画辅助类 */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
