@@ -110,7 +110,8 @@ def taobao(message):
         if items is not None:
             break
     if items is None:
-        return "未找到商品，疑似真的没加推广", [], []
+        # 返回值顺序必须与正常情况一致：results, msg, links
+        return [], "未找到商品，疑似真的没加推广", []
 
     tpwd_ability = Ability375(client)
 
@@ -150,6 +151,7 @@ def taobao(message):
             clean_link = link_match.group("url").replace("https://", "")
             links.append(clean_link)
         else:
+            # 即使 tpwd 生成失败，也要添加链接以保持数组长度一致
             links.append(item['link'].replace("https://", ""))
 
         # Add tpwd to structured data
