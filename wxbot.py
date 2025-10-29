@@ -1,59 +1,47 @@
 import werobot
 from taobao_util import taobao
-from openai import OpenAI
-import json
-import os
 
 robot = werobot.WeRoBot(token="syh1en")
-gemini2 = OpenAI(
-    base_url="https://api.deepseek.com",
-    api_key="sk-0f098a8eafa6409bb3ff23d49a12c1c9"
-)
-tools = [
-    {
-    "type": "function",
-    "function": {
-        "name": "taobao_search",
-        "description": "提取所提供的消息中的商品标题部分进行商品搜索",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "title": {
-                    "type": "string",
-                    "description": "商品标题"
-                }
-            }
-        }
-    }
-}]
+
 
 @robot.handler
-def taobao_search(message, session):
-    history = session.get("history", [])
-    history = history[10:] if len(history) > 10 else history
-    history += [{"role": "user", "content": message.content}]
-    messages = [
-        {"role": "system", "content": 
-"""你会判断用户的消息是否谈及了商品。如果用户提到了商品，尝试提取消息中的商品标题部分并进行商品搜索。当用户的消息不包含商品标题时，你会通过对话向用户提供需要的帮助。
-为了绕过淘宝联盟对于精确搜索的限制，你可以在不影响搜索准确性的前提下，交换商品标题中关键词的顺序。但你不能进行可能导致搜索结果不准确的修改。
-"""}] + history
-    response = gemini2.chat.completions.create(
-        model="deepseek-chat",
-        messages=messages,
-        tools=tools,
-    )
-    if response.choices[0].message.tool_calls is not None:
-        title = json.loads(response.choices[0].message.tool_calls[0].function.arguments)["title"]
-        result, _ = taobao(title)
-        session["history"] = []
-        ret_msg = "标题是【{}】，搜索结果如下：\n{}".format(title, result)
-        return ret_msg
-    else:
-        session["history"] = history + [{"role": "assistant", "content": response.choices[0].message.content}]
-        return response.choices[0].message.content
+def handle_message(message, session):
+    """
+    处理用户消息，直接进行淘宝商品搜索
+    移除了Gemini/LLM依赖，采用简化逻辑
+    """
+    user_input = message.content.strip()
+
+    # 检查输入是否为空
+    if not user_input:
+        return "请输入商品关键词，例如：Nike运动鞋、iPhone 15"
+
+    try:
+        # 调用新的taobao函数，返回3个值
+        results, msg, links = taobao(user_input)
+
+        # 检查是否找到商品
+        if isinstance(results, list) and len(results) > 0:
+            # 成功找到商品，返回格式化消息
+            return msg
+        else:
+            # 没有找到商品或发生错误
+            return results if isinstance(results, str) else "未找到相关商品，请尝试其他关键词"
+
+    except Exception as e:
+        # 捕获异常并返回友好错误消息
+        print(f"搜索错误: {e}")
+        return "抱歉，搜索过程中发生错误，请稍后重试"
 
 
-# 让服务器监听在 0.0.0.0:80
+# 配置服务器
 robot.config["HOST"] = "127.0.0.1"
 robot.config["PORT"] = 8923
-robot.run()
+
+if __name__ == "__main__":
+    print("=" * 60)
+    print("微信机器人启动中...")
+    print("=" * 60)
+    print(f"监听地址: {robot.config['HOST']}:{robot.config['PORT']}")
+    print("=" * 60)
+    robot.run()
