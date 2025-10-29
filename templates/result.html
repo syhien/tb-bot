@@ -46,14 +46,46 @@
       <h2 class="text-center mb-3">查询结果</h2>
       <div class="card">
         <div class="card-body">
-            <p id="result">{{ result }}</p>
-            <div class="d-grid gap-2 d-sm-flex justify-content-sm-start button-group mt-3">
-                <button id="copyButton" class="btn btn-secondary">复制结果文本</button>
-                {% if link %}
-                <a href="taobao://{{ link }}" target="_blank" class="btn btn-success">在淘宝 App 打开</a>
-                <a href="https://{{ link }}" target="_blank" class="btn btn-info">浏览器打开链接</a>
-                {% endif %}
-            </div>
+            {% if results %}
+                <!-- Multiple results view -->
+                <div id="multiResults">
+                    {% for item in results %}
+                    <div class="result-item mb-4 p-3 border rounded">
+                        <h5 class="item-title">{{ loop.index }}. {{ item.title }}</h5>
+                        <p class="mb-1"><strong>价格:</strong> {{ item.price }}</p>
+                        <p class="mb-1"><strong>店铺:</strong> {{ item.shop_name }}</p>
+                        <p class="mb-3"><strong>收入比率:</strong> {{ item.income_rate }}%</p>
+
+                        <div class="d-grid gap-2 d-sm-flex justify-content-sm-start button-group">
+                            {% if item.tpwd %}
+                            <button class="btn btn-secondary btn-sm copyTpwdBtn"
+                                    data-tpwd="{{ item.tpwd }}">复制淘口令</button>
+                            {% endif %}
+                            {% if links[loop.index0] %}
+                            <a href="taobao://{{ links[loop.index0] }}" target="_blank"
+                               class="btn btn-success btn-sm">淘宝 App 打开</a>
+                            <a href="https://{{ links[loop.index0] }}" target="_blank"
+                               class="btn btn-info btn-sm">浏览器打开</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mt-3 pt-3 border-top">
+                    <button id="copyAllButton" class="btn btn-secondary">复制全部结果文本</button>
+                </div>
+            {% else %}
+                <!-- Single result view (fallback) -->
+                <p id="result">{{ result }}</p>
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-start button-group mt-3">
+                    <button id="copyButton" class="btn btn-secondary">复制结果文本</button>
+                    {% if link %}
+                    <a href="taobao://{{ link }}" target="_blank" class="btn btn-success">在淘宝 App 打开</a>
+                    <a href="https://{{ link }}" target="_blank" class="btn btn-info">浏览器打开链接</a>
+                    {% endif %}
+                </div>
+            {% endif %}
         </div>
       </div>
        <div class="text-center mt-4">
@@ -64,21 +96,39 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        // Copy individual tpwd button
+        $(document).on('click', '.copyTpwdBtn', function() {
+            const tpwd = $(this).data('tpwd');
+            copyText(tpwd);
+        });
+
+        // Copy all results button
+        $('#copyAllButton').click(function() {
+            const resultText = $('#result').text();
+            copyText(resultText);
+        });
+
+        // Copy single result button (fallback)
         $('#copyButton').click(function () {
+            const resultText = $('#result').text();
+            copyText(resultText);
+        });
+
+        function copyText(text) {
             // Use navigator.clipboard for modern browsers
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText($('#result').text()).then(function() {
-                    alert('结果已复制到剪贴板！');
+                navigator.clipboard.writeText(text).then(function() {
+                    showAlert('已复制到剪贴板！');
                 }, function(err) {
-                    alert('复制失败: ', err);
+                    console.error('复制失败: ', err);
                     // Fallback for older browsers
-                    fallbackCopyTextToClipboard($('#result').text());
+                    fallbackCopyTextToClipboard(text);
                 });
             } else {
                 // Fallback for older browsers or insecure contexts
-                fallbackCopyTextToClipboard($('#result').text());
+                fallbackCopyTextToClipboard(text);
             }
-        });
+        }
 
         function fallbackCopyTextToClipboard(text) {
             var $temp = $("<textarea>"); // Use textarea for multi-line
@@ -86,14 +136,18 @@
             $temp.val(text).select();
             try {
                 var successful = document.execCommand('copy');
-                var msg = successful ? '结果已复制到剪贴板！' : '复制失败';
-                alert(msg);
+                showAlert(successful ? '已复制到剪贴板！' : '复制失败');
             } catch (err) {
-                alert('无法复制: ', err);
+                console.error('无法复制: ', err);
+                showAlert('复制失败，请手动复制');
             }
             $temp.remove();
         }
 
+        function showAlert(message) {
+            // Simple alert for now, could be improved with toast notifications
+            alert(message);
+        }
 
         $('#clearKeyword').click(function() {
           $('#keyword').val("");
