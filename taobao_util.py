@@ -20,11 +20,29 @@ def random_drop_char(s):
     return s
 
 
-def search_item(client, keyword):
+def calculate_similarity(original_keyword, title):
+    """Calculate similarity between original keyword and item title"""
+    # Simple similarity calculation based on common words
+    original_words = set(original_keyword.lower().split())
+    title_words = set(title.lower().split())
+
+    if not original_words:
+        return 0
+
+    common_words = original_words.intersection(title_words)
+    # Also check if original keyword is substring of title
+    if original_keyword.lower() in title.lower():
+        common_words.add(original_keyword.lower())
+
+    return len(common_words) / len(original_words)
+
+
+def search_item(client, original_keyword):
     material_ability = Defaultability(client)
     material_request = TaobaoTbkDgMaterialOptionalUpgradeRequest(
         adzone_id="111713900272", material_id="6707"
     )
+    keyword = original_keyword
     for _ in range(5):
         if keyword == "":
             raise Exception("Empty keyword")
@@ -33,7 +51,19 @@ def search_item(client, keyword):
         material_response = material_ability.taobao_tbk_dg_material_optional_upgrade(
             material_request
         )
-        if len(material_response["result_list"]) == 0:
+        # Check if we got valid results with working links
+        valid_results = 0
+        for material_info in material_response["result_list"][:10]:
+            link = (
+                material_info["publish_info"]["coupon_share_url"]
+                if "coupon_share_url" in material_info["publish_info"]
+                else material_info["publish_info"]["click_url"]
+            )
+            if link and link.strip():
+                valid_results += 1
+
+        # If no results or all links are empty, try with modified keyword
+        if len(material_response["result_list"]) == 0 or valid_results == 0:
             keyword = random_drop_char(keyword)
             continue
 
@@ -53,11 +83,14 @@ def search_item(client, keyword):
                 "price": material_info["price_promotion_info"]["zk_final_price"],
                 "shop_name": material_info["item_basic_info"]["shop_title"],
                 "income_rate": material_info["publish_info"]["income_rate"],
-                "link": "https:" + link if link else ""
+                "link": "https:" + link if link else "",
+                "similarity": calculate_similarity(original_keyword, material_info["item_basic_info"]["title"])
             }
             results.append(item)
 
         if results:
+            # Sort by similarity score (descending)
+            results.sort(key=lambda x: x["similarity"], reverse=True)
             return results
     raise Exception("No item found")
 
@@ -77,7 +110,7 @@ def taobao(message):
         if items is not None:
             break
     if items is None:
-        return "未找到商品，疑似真的没加推广", []
+        return "未找到商品，疑似真的没加推广", [], []
 
     tpwd_ability = Ability375(client)
 

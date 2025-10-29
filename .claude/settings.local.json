@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"\nfrom taobao_util import taobao\n# 测试正常关键词\nresult, msg, links = taobao(''兰蔻小黑瓶精华'')\nprint(''=== 测试兰蔻 ==='')\nprint(msg)\nprint(''链接数量:'', len(links))\n\")",
+      "Bash(python -c \"\nfrom taobao_util import taobao\n# 测试带特殊符号的完整标题\nresult, msg, links = taobao(''【立即抢购】雅诗兰黛小棕瓶精华液修护保湿抗老修护精华'')\nprint(''=== 测试雅诗兰黛完整标题（含特殊符号）==='')\nprint(msg)\nprint(''链接数量:'', len(links))\nprint(''是否成功:'', ''成功'' if links else ''失败'')\n\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
