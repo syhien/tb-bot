@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商品查询与跳转 - 淘宝联盟</title>
+    <title>商品查询 - 淘宝联盟</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
@@ -14,7 +14,7 @@
       <div class="text-center mb-5">
         <h1 class="display-5 fw-bold text-brand mb-3">
           <i class="bi bi-bag-heart-fill"></i>
-          商品查询与跳转
+          商品查询
         </h1>
         <p class="text-secondary lead">快速查询淘宝商品，获取返利链接</p>
       </div>
@@ -53,43 +53,11 @@
         </div>
       </div>
 
-      <!-- 链接跳转卡片 -->
-      <div class="card fade-in">
-        <div class="card-body">
-          <h5 class="card-title mb-3">
-            <i class="bi bi-link-45deg text-success"></i>
-            通过链接跳转
-          </h5>
-          <div class="mb-3">
-            <label for="directLink" class="form-label fw-semibold">
-              <i class="bi bi-clipboard-data text-accent"></i>
-              粘贴包含淘口令或链接的文本
-            </label>
-            <textarea class="form-control form-control-lg" id="directLink" name="directLink" rows="4"
-                      placeholder="粘贴客服发送的包含链接的整段消息..."></textarea>
-          </div>
-          <div class="d-flex flex-wrap gap-2 mb-3">
-             <button type="button" class="btn btn-outline-secondary" id="clearDirectLink">
-               <i class="bi bi-trash"></i>
-               清空
-             </button>
-             <button type="button" class="btn btn-outline-secondary" id="pasteDirectLink">
-               <i class="bi bi-clipboard"></i>
-               粘贴
-             </button>
-          </div>
-          <button id="directButton" class="btn btn-success btn-lg w-100">
-            <i class="bi bi-box-arrow-up-right"></i>
-            打开淘宝链接
-          </button>
-        </div>
-      </div>
-
       <!-- 页脚提示 -->
       <div class="text-center mt-4 text-secondary">
         <small>
           <i class="bi bi-info-circle"></i>
-          支持完整标题搜索，智能处理比价检测
+          支持完整标题搜索，智能处理比价检测与商品查询
         </small>
       </div>
     </div>
@@ -98,66 +66,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
     <script>
-       // 链接跳转功能增强
-       $('#directButton').click(function() {
-          let text = $('#directLink').val();
-          if (!text.trim()) {
-             showToast('请输入包含链接的文本', 'error');
-             return;
-          }
-
-          // More robust regex to find taobao/https links
-          let match = text.match(/(https?:\/\/|taobao:\/\/)[a-zA-Z0-9\.\/=\?%\-_&#]+/);
-          if (match && match[0]) {
-              let link = match[0];
-              console.log("Found link:", link);
-              if(link.startsWith('https')) {
-                  // Attempt to convert https link to taobao:// scheme if it looks like a product/shop link
-                  // This is a basic conversion, might need refinement
-                  if (link.includes('item.htm') || link.includes('shop/view_shop.htm')) {
-                     link = 'taobao://' + link.substring(link.indexOf('m.tb.cn') > -1 ? link.indexOf('m.tb.cn') : link.indexOf('item.taobao.com')); // Adjust based on typical mobile/desktop URLs
-                  } else {
-                     // If it's not a recognizable product/shop link, open the https link directly
-                     window.open(link, '_blank');
-                     showToast('正在打开链接...', 'success');
-                     return; // Exit after opening https link
-                  }
-              }
-              // Ensure it starts with taobao:// before opening
-              if (link.startsWith('taobao://')) {
-                 console.log("Opening taobao link:", link);
-                 window.open(link, '_blank');
-                 showToast('正在打开淘宝...', 'success');
-              } else {
-                 showToast('无法识别有效的淘宝链接', 'error');
-              }
-          } else {
-              showToast('未在文本中找到有效的链接', 'error');
-          }
-       });
-
-       // 为直接链接功能添加清空和粘贴按钮的提示
-       $('#clearDirectLink').click(function() {
-          $('#directLink').val("");
-          showToast('已清空', 'info', 1500);
-       });
-
-       $('#pasteDirectLink').click(function() {
-          if (navigator.clipboard && navigator.clipboard.readText) {
-             navigator.clipboard.readText()
-               .then(text => {
-                 $('#directLink').val(text);
-                 showToast('已粘贴', 'success', 1500);
-               })
-               .catch(err => {
-                   console.error('Failed to read clipboard contents: ', err);
-                   showToast('无法读取剪贴板内容', 'error');
-               });
-          } else {
-             showToast('浏览器不支持剪贴板功能', 'error');
-          }
-       });
-
        // 添加键盘快捷键支持
        $(document).keydown(function(e) {
           // Ctrl/Cmd + Enter 提交搜索
