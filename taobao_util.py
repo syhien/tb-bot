@@ -95,17 +95,65 @@ def search_item(client, original_keyword):
     raise Exception("No item found")
 
 
-def taobao(message):
-    client = TopApiClient(
+def _make_client():
+    return TopApiClient(
         appkey="33082016",
         app_sercet="df6564cdf0c69b64581f915c4b770324",
         top_gateway_url="https://eco.taobao.com/router/rest",
     )
+
+
+def taobao_stream(message):
+    client = _make_client()
     items = None
     for _ in range(3):
         try:
             items = search_item(client, message)
-        except Exception as e:
+        except Exception:
+            pass
+        if items is not None:
+            break
+    if items is None:
+        yield {"type": "error", "message": "未找到商品，疑似真的没加推广"}
+        return
+
+    total = len(items)
+    yield {"type": "search_complete", "total": total}
+
+    tpwd_ability = Ability375(client)
+
+    for i, item in enumerate(items):
+        tpwd = ""
+        try:
+            tpwd_request = TaobaoTbkTpwdCreateRequest(url=item["link"])
+            tpwd_response = tpwd_ability.taobao_tbk_tpwd_create(tpwd_request)
+            tpwd = tpwd_response["data"]["model"]
+        except Exception:
+            tpwd = ""
+
+        link_match = re.search(r"(?P<url>https?://[^\s]+)", tpwd) if tpwd else None
+        if link_match:
+            clean_link = link_match.group("url").replace("https://", "")
+        else:
+            clean_link = item["link"].replace("https://", "")
+
+        result_item = item.copy()
+        result_item["tpwd"] = tpwd
+        result_item["link_clean"] = clean_link
+        result_item["index"] = i + 1
+        result_item["total"] = total
+        yield {"type": "item", "data": result_item}
+
+    yield {"type": "done", "total": total}
+
+
+def taobao(message):
+    client = _make_client()
+    items = None
+    for _ in range(3):
+        try:
+            items = search_item(client, message)
+        except Exception:
             pass
         if items is not None:
             break

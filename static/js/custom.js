@@ -93,7 +93,6 @@ function initSearchForm() {
 
   if (!searchForm || !searchInput || !searchButton) return;
 
-  // 表单提交处理
   searchForm.addEventListener('submit', function(e) {
     const keyword = searchInput.value.trim();
 
@@ -104,16 +103,191 @@ function initSearchForm() {
       return;
     }
 
-    // 显示加载状态
-    showLoading();
+    e.preventDefault();
+    startStreamingSearch(keyword);
   });
+}
 
-  // 输入框回车事件
-  searchInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-      searchForm.dispatchEvent(new Event('submit'));
+function startStreamingSearch(keyword) {
+  var container = document.querySelector('.container');
+  container.innerHTML =
+    '<div class="card mb-4 fade-in"><div class="card-body">' +
+      '<h5 class="card-title mb-3"><i class="bi bi-search text-brand"></i> 再次查询</h5>' +
+      '<form id="streamSearchForm" method="POST" action="/search">' +
+        '<div class="mb-3">' +
+          '<label for="keyword" class="form-label fw-semibold"><i class="bi bi-tag-fill text-accent"></i> 输入商品关键词</label>' +
+          '<input type="text" class="form-control form-control-lg" id="keyword" name="keyword" placeholder="例如：Nike 运动鞋、iPhone 15" value="' + escapeHtml(keyword) + '">' +
+        '</div>' +
+        '<div class="d-flex flex-wrap gap-2 mb-3">' +
+          '<button type="button" class="btn btn-outline-secondary" id="clearKeyword"><i class="bi bi-arrow-counterclockwise"></i> 清空</button>' +
+          '<button type="button" class="btn btn-outline-secondary" id="pasteKeyword"><i class="bi bi-clipboard"></i> 粘贴</button>' +
+        '</div>' +
+        '<button type="submit" class="btn btn-primary btn-lg w-100"><i class="bi bi-search"></i> 查询商品</button>' +
+      '</form>' +
+    '</div></div>' +
+    '<div id="streamStatus" class="text-center mb-4">' +
+      '<div class="loading-spinner" style="display:inline-block;width:40px;height:40px;border:4px solid #f5f5f5;border-top-color:#1677ff;border-radius:50%;animation:spin 1s linear infinite;"></div>' +
+      '<p class="text-secondary mt-2">正在搜索商品...</p>' +
+    '</div>' +
+    '<div id="streamResults"></div>' +
+    '<div id="streamFooter" style="display:none;" class="text-center mt-4">' +
+      '<button id="copyAllButton" class="btn btn-secondary btn-lg mb-3"><i class="bi bi-clipboard-data"></i> 复制全部结果文本</button><br>' +
+      '<a href="/" class="btn btn-outline-primary btn-lg"><i class="bi bi-house-door"></i> 返回首页</a>' +
+    '</div>';
+
+  initSearchForm();
+  initClearPasteButtons();
+
+  fetch('/search/stream', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: 'keyword=' + encodeURIComponent(keyword)
+  }).then(function(response) {
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    var reader = response.body.getReader();
+    var decoder = new TextDecoder();
+    var buffer = '';
+
+    function pump() {
+      return reader.read().then(function(result) {
+        if (result.done) {
+          onStreamDone();
+          return;
+        }
+        buffer += decoder.decode(result.value, {stream: true});
+        var lines = buffer.split('\n');
+        buffer = lines.pop();
+        var currentEvent = '';
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i];
+          if (line.indexOf('event: ') === 0) {
+            currentEvent = line.substring(7);
+          } else if (line.indexOf('data: ') === 0) {
+            var jsonStr = line.substring(6);
+            try {
+              var data = JSON.parse(jsonStr);
+              handleStreamEvent(currentEvent, data);
+            } catch(e) {}
+            currentEvent = '';
+          }
+        }
+        return pump();
+      });
     }
+
+    return pump();
+  }).catch(function(err) {
+    console.error('Streaming failed:', err);
+    showToast('流式加载失败，使用普通查询', 'error');
+    window.location.href = '/search?fallback=1';
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/search';
+    var input = document.createElement('input');
+    input.name = 'keyword';
+    input.value = keyword;
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
   });
+}
+
+function handleStreamEvent(eventType, data) {
+  var statusEl = document.getElementById('streamStatus');
+  var resultsEl = document.getElementById('streamResults');
+
+  if (eventType === 'search_complete') {
+    statusEl.innerHTML =
+      '<h2 class="display-6 fw-bold text-brand"><i class="bi bi-check-circle-fill"></i> 查询结果</h2>' +
+      '<p class="text-secondary">找到 ' + data.total + ' 个商品，正在加载详情...</p>';
+  } else if (eventType === 'item') {
+    var item = data.data;
+    var idx = item.index;
+    var card = buildItemCard(item, idx);
+    resultsEl.insertAdjacentHTML('beforeend', card);
+    initCopyButtons();
+  } else if (eventType === 'done') {
+    onStreamDone();
+  } else if (eventType === 'error') {
+    statusEl.innerHTML =
+      '<div class="text-center mb-4"><i class="bi bi-info-circle text-brand" style="font-size:4rem;"></i></div>' +
+      '<p class="fs-5 text-center text-secondary">' + escapeHtml(data.message) + '</p>';
+  }
+}
+
+function buildItemCard(item, idx) {
+  var tpwdBtn = item.tpwd
+    ? '<button class="btn btn-secondary copyTpwdBtn flex-fill" data-tpwd="' + escapeAttr(item.tpwd) + '"><i class="bi bi-clipboard"></i> 复制淘口令</button>'
+    : '';
+  var linkBtns = item.link_clean
+    ? '<a href="taobao://' + escapeAttr(item.link_clean) + '" target="_blank" class="btn btn-success flex-fill"><i class="bi bi-phone"></i> 淘宝 App 打开</a>' +
+      '<a href="https://' + escapeAttr(item.link_clean) + '" target="_blank" class="btn btn-info flex-fill"><i class="bi bi-globe"></i> 浏览器打开</a>'
+    : '';
+
+  return '<div class="card mb-3"><div class="card-body">' +
+    '<div class="result-item slide-up" style="margin-bottom:0;border:none;box-shadow:none;padding:0;">' +
+      '<div class="d-flex justify-content-between align-items-start mb-2">' +
+        '<h5 class="item-title mb-0"><span class="badge bg-brand rounded-pill me-2">' + idx + '</span>' + escapeHtml(item.title) + '</h5>' +
+      '</div>' +
+      '<div class="row g-3 mb-3">' +
+        '<div class="col-sm-6"><div class="d-flex align-items-center gap-2"><i class="bi bi-currency-yen text-accent fs-4"></i><div><div class="text-secondary small">价格</div><div class="price fw-bold">¥' + escapeHtml(item.price) + '</div></div></div></div>' +
+        '<div class="col-sm-6"><div class="d-flex align-items-center gap-2"><i class="bi bi-shop text-brand fs-4"></i><div><div class="text-secondary small">店铺</div><div class="shop-name fw-semibold">' + escapeHtml(item.shop_name) + '</div></div></div></div>' +
+      '</div>' +
+      '<div class="d-flex justify-content-between align-items-center mb-3"><div class="income-rate"><i class="bi bi-graph-up-arrow"></i> 收入比率: ' + escapeHtml(item.income_rate) + '%</div></div>' +
+      '<div class="d-grid gap-2 d-sm-flex justify-content-sm-start button-group">' + tpwdBtn + linkBtns + '</div>' +
+    '</div></div></div>';
+}
+
+function onStreamDone() {
+  var statusEl = document.getElementById('streamStatus');
+  var footerEl = document.getElementById('streamFooter');
+  var spinner = statusEl.querySelector('.loading-spinner');
+  if (spinner) spinner.style.display = 'none';
+  var loadingText = statusEl.querySelector('.text-secondary');
+  if (loadingText && loadingText.textContent.indexOf('正在加载') !== -1) {
+    loadingText.remove();
+  }
+  if (footerEl) footerEl.style.display = 'block';
+  initCopyButtons();
+}
+
+function initClearPasteButtons() {
+  var clearBtn = document.getElementById('clearKeyword');
+  var pasteBtn = document.getElementById('pasteKeyword');
+  var keywordInput = document.getElementById('keyword');
+
+  if (clearBtn && keywordInput) {
+    clearBtn.onclick = function() {
+      keywordInput.value = '';
+      keywordInput.focus();
+      showToast('已清空', 'info', 1500);
+    };
+  }
+
+  if (pasteBtn && keywordInput) {
+    pasteBtn.onclick = function() {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        navigator.clipboard.readText().then(function(text) {
+          keywordInput.value = text.trim();
+          showToast('已粘贴', 'success', 1500);
+        }).catch(function() {
+          showToast('无法读取剪贴板内容', 'error');
+        });
+      } else {
+        showToast('浏览器不支持剪贴板功能', 'error');
+      }
+    };
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function escapeAttr(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 /* ========================================
@@ -138,10 +312,11 @@ function initCopyButtons() {
   const copyAllBtn = document.getElementById('copyAllButton');
   if (copyAllBtn) {
     copyAllBtn.addEventListener('click', function() {
+      const streamResults = document.getElementById('streamResults');
       const resultElement = document.getElementById('result');
-      if (resultElement) {
-        const text = resultElement.textContent;
-        copyToClipboard(text, '结果已复制到剪贴板！');
+      const source = streamResults || resultElement;
+      if (source) {
+        copyToClipboard(source.textContent, '结果已复制到剪贴板！');
       }
     });
   }
