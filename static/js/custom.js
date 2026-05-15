@@ -111,18 +111,16 @@ function initSearchForm() {
 function startStreamingSearch(keyword) {
   var container = document.querySelector('.container');
   container.innerHTML =
-    '<div class="card mb-4 fade-in"><div class="card-body">' +
-      '<h5 class="card-title mb-3"><i class="bi bi-search text-brand"></i> 再次查询</h5>' +
+    '<div class="card mb-4 fade-in search-compact"><div class="card-body">' +
       '<form id="streamSearchForm" method="POST" action="/search">' +
-        '<div class="mb-3">' +
-          '<label for="keyword" class="form-label fw-semibold"><i class="bi bi-tag-fill text-accent"></i> 输入商品关键词</label>' +
-          '<input type="text" class="form-control form-control-lg" id="keyword" name="keyword" placeholder="例如：Nike 运动鞋、iPhone 15" value="' + escapeHtml(keyword) + '">' +
+        '<div class="input-group">' +
+          '<input type="text" class="form-control" id="keyword" name="keyword" placeholder="输入商品关键词搜索" value="' + escapeHtml(keyword) + '">' +
+          '<button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> 查询</button>' +
         '</div>' +
-        '<div class="d-flex flex-wrap gap-2 mb-3">' +
+        '<div class="d-flex search-utils">' +
           '<button type="button" class="btn btn-outline-secondary" id="clearKeyword"><i class="bi bi-arrow-counterclockwise"></i> 清空</button>' +
           '<button type="button" class="btn btn-outline-secondary" id="pasteKeyword"><i class="bi bi-clipboard"></i> 粘贴</button>' +
         '</div>' +
-        '<button type="submit" class="btn btn-primary btn-lg w-100"><i class="bi bi-search"></i> 查询商品</button>' +
       '</form>' +
     '</div></div>' +
     '<div id="streamStatus" class="text-center mb-4">' +
@@ -198,13 +196,33 @@ function handleStreamEvent(eventType, data) {
 
   if (eventType === 'search_complete') {
     statusEl.innerHTML =
-      '<h2 class="display-6 fw-bold text-brand"><i class="bi bi-check-circle-fill"></i> 查询结果</h2>' +
-      '<p class="text-secondary">找到 ' + data.total + ' 个商品，正在加载详情...</p>';
+      '<h2 class="display-6 fw-bold text-brand"><i class="bi bi-check-circle-fill"></i> 查询结果</h2>';
+    var skeletons = '';
+    for (var s = 0; s < data.total; s++) {
+      skeletons += '<div class="card mb-3" id="skeleton-' + (s + 1) + '"><div class="card-body">' +
+        '<div class="skeleton-bar" style="width:70%;height:22px;margin-bottom:16px;"></div>' +
+        '<div class="row g-3 mb-3">' +
+          '<div class="col-sm-6"><div class="skeleton-bar" style="width:40%;height:32px;"></div></div>' +
+          '<div class="col-sm-6"><div class="skeleton-bar" style="width:60%;height:18px;"></div></div>' +
+        '</div>' +
+        '<div class="skeleton-bar" style="width:30%;height:26px;border-radius:20px;margin-bottom:12px;"></div>' +
+        '<div class="d-flex gap-2">' +
+          '<div class="skeleton-bar" style="width:120px;height:40px;"></div>' +
+          '<div class="skeleton-bar" style="width:120px;height:40px;"></div>' +
+        '</div>' +
+      '</div></div>';
+    }
+    resultsEl.innerHTML = skeletons;
   } else if (eventType === 'item') {
     var item = data.data;
     var idx = item.index;
     var card = buildItemCard(item, idx);
-    resultsEl.insertAdjacentHTML('beforeend', card);
+    var skeleton = document.getElementById('skeleton-' + idx);
+    if (skeleton) {
+      skeleton.outerHTML = card;
+    } else {
+      resultsEl.insertAdjacentHTML('beforeend', card);
+    }
     initCopyButtons();
   } else if (eventType === 'done') {
     onStreamDone();
